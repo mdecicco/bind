@@ -8,9 +8,7 @@ namespace bind {
         DataType* tp = Registry::GetType<T>();
         if (tp) throw Exception(String::Format("Namespace::type - Type '%s' has already been registered", type_name<T>()));
 
-        ObjectTypeBuilder<T> ret = ObjectTypeBuilder<T>(name, this);
-        add(ret.getType());
-        return ret;
+        return ObjectTypeBuilder<T>(name, this);
     }
 
     template <typename T>

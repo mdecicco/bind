@@ -6,6 +6,11 @@
 #include <utils/Exception.h>
 
 namespace bind {
+    template <typename T, typename Enable>
+    DataType* TypeResolver<T, Enable>::Get(size_t nativeHash) {
+        return nullptr;
+    }
+
     template <typename T>
     DataType* Registry::GetType() {
         if (!instance) throw Exception("Registry::GetType - Registry has not been created");
@@ -17,8 +22,11 @@ namespace bind {
             if (it != instance->m_hostTypeMap.end()) return it->second;
         }
 
+        DataType* customType = TypeResolver<T>::Get(hash);
+        if (customType) return customType;
+
         if constexpr (std::is_pointer_v<T>) {
-            DataType* tp = GetType<std::remove_pointer_t<T>>();
+            DataType* tp = GetType<std::remove_const_t<std::remove_pointer_t<T>>>();
             if (!tp) {
                 throw Exception(String::Format(
                     "Registry::GetType - Could not automatically register pointer type, base type '%s' has not been registered",
@@ -32,7 +40,7 @@ namespace bind {
         }
         
         if constexpr (std::is_reference_v<T>) {
-            DataType* tp = GetType<std::remove_reference_t<T>>();
+            DataType* tp = GetType<std::remove_const_t<std::remove_reference_t<T>>>();
             if (!tp) {
                 throw Exception(String::Format(
                     "Registry::GetType - Could not automatically register pointer type, base type '%s' has not been registered",

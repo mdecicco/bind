@@ -7,6 +7,10 @@
 #include <utils/Array.h>
 #include <utils/Pointer.h>
 
+#ifndef BIND_DATATYPE_USERDATA_SIZE
+    #define BIND_DATATYPE_USERDATA_SIZE 32
+#endif
+
 #define FFI_STATIC_BUILD
 #define FFI_BUILDING
 #include <ffi.h>
@@ -15,7 +19,7 @@ namespace bind {
     class Function;
     class PointerType;
 
-    class DataType : public IWithFixedUserData<32>, public ISymbol {
+    class DataType : public IWithFixedUserData<BIND_DATATYPE_USERDATA_SIZE>, public ISymbol {
         public:
             struct Property : public IWithFixedUserData<32> {
                 struct Flags {
@@ -130,6 +134,24 @@ namespace bind {
                 AccessFlags accessMask = FullAccessRights,
                 Function** singleStrictMatch = nullptr
             ) const;
+
+            /**
+             * @brief Returns an array of constructors
+             * 
+             * @param accessMask Access rights to filter the constructors by
+             * 
+             * @return Array of constructors
+             */
+            Array<Function*> getConstructors(AccessFlags accessMask = FullAccessRights) const;
+
+            /**
+             * @brief Returns the destructor function for this type, if one is defined
+             * 
+             * @param accessMask Access rights
+             * 
+             * @return Destructor function, or nullptr if no destructor is defined
+             */
+            Function* getDestructor(AccessFlags accessMask = FullAccessRights);
 
             /**
              * @brief Returns a conversion operator that converts from this type to the

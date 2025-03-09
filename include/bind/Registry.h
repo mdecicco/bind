@@ -11,6 +11,30 @@ namespace bind {
     class ValuePointer;
     class Namespace;
 
+    /*
+     * TypeResolver is a template that allows for custom type resolution.
+     * It is used to resolve types that are not directly supported by the Registry.
+     * For example, you can use it to resolve template types in custom ways.
+     */
+    template <typename T, typename Enable = void>
+    struct TypeResolver {
+        /*
+         * Get is a static method that returns the DataType for a given type `T`.
+         * This method can return nullptr to fall back to the default implementation.
+         * 
+         * If you create a type for `T`, you MUST register it with the specified `nativeHash`.
+         * 
+         * ```
+         * bind::Registry::Add(yourType, nativeHash);
+         * ```
+         * 
+         * 
+         * If you fail to do this, your type will be created each time `bind::Registry::GetType<T>()`
+         * is called.
+         */
+        static DataType* Get(size_t nativeHash);
+    };
+
     class Registry {
         public:
             static void Create();

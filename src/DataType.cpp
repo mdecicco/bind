@@ -286,6 +286,37 @@ namespace bind {
         return ret;
     }
 
+    Array<Function*> DataType::getConstructors(AccessFlags accessMask) const {
+        Array<Function*> ret;
+
+        for (u32 i = 0;i < m_props.size();i++) {
+            const Property& p = m_props[i];
+            if (p.flags.is_ctor == 0) continue;
+            if (p.accessFlags != PublicAccess && (p.accessFlags & accessMask) != p.accessFlags) continue;
+
+            FunctionType* sig = (FunctionType*)p.type;
+            
+            if (p.name.size() != ConstructorNameLen) continue;
+            if (p.name != ConstructorName) continue;
+
+            ret.push((Function*)p.address.get());
+        }
+
+        return ret;
+    }
+
+    Function* DataType::getDestructor(AccessFlags accessMask) {
+        for (u32 i = 0;i < m_props.size();i++) {
+            const Property& p = m_props[i];
+            if (p.flags.is_dtor == 0) continue;
+            if (p.accessFlags != PublicAccess && (p.accessFlags & accessMask) != p.accessFlags) continue;
+
+            return (Function*)p.address.get();
+        }
+
+        return nullptr;
+    }
+
     Function* DataType::findConversionOperator(DataType* resultType, AccessFlags accessMask) const {
         for (u32 i = 0;i < m_props.size();i++) {
             const Property& p = m_props[i];
