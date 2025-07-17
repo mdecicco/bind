@@ -11,6 +11,47 @@ namespace bind {
         return nullptr;
     }
 
+    template <typename F, typename = void>
+    struct function_traits;
+
+    template <typename Ret, typename... Args>
+    struct function_traits<Ret(Args...)> {
+        using return_type = Ret;
+        using class_type = void;
+        using args_type = std::tuple<Args...>;
+    };
+
+    template <typename Ret, typename... Args>
+    struct function_traits<Ret(*)(Args...)> {
+        using return_type = Ret;
+        using class_type = void;
+        using args_type = std::tuple<Args...>;
+    };
+
+    template <typename Ret, typename Cls, typename... Args>
+    struct function_traits<Ret(Cls::*)(Args...)> {
+        using return_type = Ret;
+        using class_type = Cls;
+        using args_type = std::tuple<Args...>;
+    };
+
+    template <typename T, typename Tuple, std::size_t... argc>
+    DataType* __get_sig_with_tuple_args(std::index_sequence<argc...>) {
+        using traits = function_traits<T>;
+        if constexpr (std::is_same_v<typename traits::class_type, void>) {
+            return Registry::Signature<
+                typename traits::return_type,
+                std::tuple_element_t<argc, Tuple>...
+            >();
+        } else {
+            return Registry::MethodSignature<
+                typename traits::return_type,
+                typename traits::class_type,
+                std::tuple_element_t<argc, Tuple>...
+            >();
+        }
+    }
+
     template <typename T>
     DataType* Registry::GetType() {
         if (!instance) throw Exception("Registry::GetType - Registry has not been created");
@@ -51,6 +92,32 @@ namespace bind {
             PointerType* pt = tp->getPointerType();
             instance->m_hostTypeMap.insert(std::pair<size_t, DataType*>(hash, pt));
             return pt;
+        }
+
+        if constexpr (std::is_function_v<T>) {
+            using traits = function_traits<T>;
+            if constexpr (std::is_same_v<typename traits::class_type, void>) {
+                if constexpr (std::tuple_size_v<typename traits::args_type> > 0) {
+                    return __get_sig_with_tuple_args<
+                        T,
+                        typename traits::args_type
+                    >(std::make_index_sequence<std::tuple_size_v<typename traits::args_type>>());
+                } else {
+                    return Signature<typename traits::return_type>();
+                }
+            } else {
+                if constexpr (std::tuple_size_v<typename traits::args_type> > 0) {
+                    return __get_sig_with_tuple_args<
+                        T,
+                        typename traits::args_type
+                    >(std::make_index_sequence<std::tuple_size_v<typename traits::args_type>>());
+                } else {
+                    return MethodSignature<
+                        typename traits::return_type,
+                        typename traits::class_type
+                    >();
+                }
+            }
         }
         
         return nullptr;
