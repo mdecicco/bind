@@ -1,51 +1,63 @@
+#include <bind/AliasType.h>
 #include <bind/Namespace.h>
 #include <bind/Registry.h>
-#include <bind/AliasType.h>
 #include <utils/Array.hpp>
 
 namespace bind {
     Namespace::Namespace(const String& name)
         : ISymbol(
-            name,
-            ISymbol::genFullSymbolName(Registry::GlobalNamespace(), name),
-            ISymbol::genNamespaceSymbolName(Registry::GlobalNamespace(), name),
-            SymbolType::Namespace
-        ), m_parent(Registry::GlobalNamespace()), m_forType(nullptr)
-    {
-        if (m_parent) m_parent->add(this);
+              name,
+              ISymbol::genFullSymbolName(Registry::GlobalNamespace(), name),
+              ISymbol::genNamespaceSymbolName(Registry::GlobalNamespace(), name),
+              SymbolType::Namespace
+          ),
+          m_parent(Registry::GlobalNamespace()),
+          m_forType(nullptr) {
+        if (m_parent) {
+            m_parent->add(this);
+        }
     }
 
     Namespace::Namespace(Namespace* parent, const String& name)
         : ISymbol(
-            name,
-            ISymbol::genFullSymbolName(parent, name),
-            ISymbol::genNamespaceSymbolName(parent, name),
-            SymbolType::Namespace
-        ), m_parent(parent ? parent : Registry::GlobalNamespace()), m_forType(nullptr)
-    {
-        if (m_parent) m_parent->add(this);
+              name,
+              ISymbol::genFullSymbolName(parent, name),
+              ISymbol::genNamespaceSymbolName(parent, name),
+              SymbolType::Namespace
+          ),
+          m_parent(parent ? parent : Registry::GlobalNamespace()),
+          m_forType(nullptr) {
+        if (m_parent) {
+            m_parent->add(this);
+        }
     }
 
     Namespace::Namespace(DataType* type)
         : ISymbol(
-            type->getName(),
-            ISymbol::genFullSymbolName(Registry::GlobalNamespace(), type->getName()),
-            ISymbol::genTypeSymbolName(Registry::GlobalNamespace(), type->getName()),
-            SymbolType::Namespace
-        ), m_parent(Registry::GlobalNamespace()), m_forType(type)
-    {
-        if (m_parent) m_parent->add(this);
+              type->getName(),
+              ISymbol::genFullSymbolName(Registry::GlobalNamespace(), type->getName()),
+              ISymbol::genTypeSymbolName(Registry::GlobalNamespace(), type->getName()),
+              SymbolType::Namespace
+          ),
+          m_parent(Registry::GlobalNamespace()),
+          m_forType(type) {
+        if (m_parent) {
+            m_parent->add(this);
+        }
     }
 
     Namespace::Namespace(Namespace* parent, DataType* type)
         : ISymbol(
-            type->getName(),
-            ISymbol::genFullSymbolName(parent, type->getName()),
-            ISymbol::genTypeSymbolName(parent, type->getName()),
-            SymbolType::Namespace
-        ), m_parent(parent ? parent : Registry::GlobalNamespace()), m_forType(type)
-    {
-        if (m_parent) m_parent->add(this);
+              type->getName(),
+              ISymbol::genFullSymbolName(parent, type->getName()),
+              ISymbol::genTypeSymbolName(parent, type->getName()),
+              SymbolType::Namespace
+          ),
+          m_parent(parent ? parent : Registry::GlobalNamespace()),
+          m_forType(type) {
+        if (m_parent) {
+            m_parent->add(this);
+        }
     }
 
     AliasType* Namespace::alias(const String& name, DataType* aliasOf) {
@@ -57,24 +69,28 @@ namespace bind {
     Namespace* Namespace::getParent() const {
         return m_parent;
     }
-    
+
     DataType* Namespace::getCorrespondingType() const {
         return m_forType;
     }
 
     ISymbol* Namespace::findSymbol(const String& symbolName) const {
         auto it = m_symbolMap.find(ISymbol::genSymbolID(symbolName));
-        if (it != m_symbolMap.end()) return it->second;
+        if (it != m_symbolMap.end()) {
+            return it->second;
+        }
 
         return nullptr;
     }
-    
+
     void Namespace::findSymbols(const String& name, Array<ISymbol*>& outResults) const {
         for (ISymbol* sym : m_symbols) {
-            if (sym->getName() == name) outResults.push(sym);
+            if (sym->getName() == name) {
+                outResults.push(sym);
+            }
         }
     }
-    
+
     const Array<ISymbol*>& Namespace::getSymbols() const {
         return m_symbols;
     }
@@ -90,15 +106,21 @@ namespace bind {
 
         if (sym->m_namespace) {
             if (sym->m_namespace == this) {
-                throw Exception(String::Format("Namespace::add - Symbol '%s' has already been added", sym->getName().c_str()));
+                throw InputException(
+                    String::Format("Namespace::add - Symbol '%s' has already been added", sym->getName().c_str())
+                );
             }
-            
-            throw Exception(String::Format("Namespace::add - Symbol '%s' has already been added to another namespace", sym->getName().c_str()));
+
+            throw InputException(String::Format(
+                "Namespace::add - Symbol '%s' has already been added to another namespace", sym->getName().c_str()
+            ));
         }
 
         auto it = m_symbolMap.find(sym->getSymbolId());
         if (it != m_symbolMap.end()) {
-            throw Exception(String::Format("Namespace::add - Symbol '%s' has already been added", sym->getName().c_str()));
+            throw InputException(
+                String::Format("Namespace::add - Symbol '%s' has already been added", sym->getName().c_str())
+            );
         };
 
         m_symbolMap.insert(std::pair(sym->getSymbolId(), sym));
@@ -108,13 +130,17 @@ namespace bind {
     }
 
     void Namespace::remove(ISymbol* sym) {
-        if (sym->m_namespace != this) return;
-        
+        if (sym->m_namespace != this) {
+            return;
+        }
+
         auto it = m_symbolMap.find(sym->getSymbolId());
-        if (it == m_symbolMap.end()) return;
+        if (it == m_symbolMap.end()) {
+            return;
+        }
 
         m_symbolMap.erase(it);
-        for (u32 i = 0;i < m_symbols.size();i++) {
+        for (u32 i = 0; i < m_symbols.size(); i++) {
             if (m_symbols[i] == sym) {
                 m_symbols.remove(i);
                 break;
