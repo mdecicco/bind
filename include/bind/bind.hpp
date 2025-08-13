@@ -4,55 +4,81 @@
 
 namespace bind {
     template <typename T>
-    std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>>
-    type(const String& name) {
+    std::enable_if_t<is_type_valid_opaque_v<T>, DataType*> opaqueType(const String& name) {
         DataType* tp = Registry::GetType<T>();
-        if (tp) throw Exception(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        if (tp) {
+            throw Exception(String::Format("opaqueType - Type '%s' has already been registered", type_name<T>()));
+        }
+
+        size_t hash = type_hash<T>();
+        type_meta m = meta<std::remove_pointer_t<T>>();
+
+        // because it's actually a pointer...
+        m.size                      = sizeof(T);
+        m.is_trivially_copyable     = 1;
+        m.is_trivially_destructible = 1;
+
+        tp = new DataType(name, m, Registry::GlobalNamespace());
+        Registry::Add(tp, hash);
+        return tp;
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>> type(const String& name) {
+        DataType* tp = Registry::GetType<T>();
+        if (tp) {
+            throw InputException(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        }
 
         return ObjectTypeBuilder<T>(name, Registry::GlobalNamespace());
     }
 
     template <typename T>
-    std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>>
-    extend() {
+    std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>> extend() {
         DataType* tp = Registry::GetType<T>();
-        if (!tp) throw Exception(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        if (!tp) {
+            throw InputException(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        }
 
         return ObjectTypeBuilder<T>(tp);
     }
 
     template <typename T>
-    std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>>
-    type(const String& name) {
+    std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>> type(const String& name) {
         DataType* tp = Registry::GetType<T>();
-        if (tp) throw Exception(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        if (tp) {
+            throw InputException(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        }
 
         return PrimitiveTypeBuilder<T>(name, Registry::GlobalNamespace());
     }
 
     template <typename T>
-    std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>>
-    extend() {
+    std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>> extend() {
         DataType* tp = Registry::GetType<T>();
-        if (!tp) throw Exception(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        if (!tp) {
+            throw InputException(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        }
 
         return PrimitiveTypeBuilder<T>(tp);
     }
 
     template <typename T>
-    std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>>
-    type(const String& name) {
+    std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>> type(const String& name) {
         DataType* tp = Registry::GetType<T>();
-        if (tp) throw Exception(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        if (tp) {
+            throw InputException(String::Format("type - Type '%s' has already been registered", type_name<T>()));
+        }
 
         return EnumTypeBuilder<T>(name, Registry::GlobalNamespace());
     }
 
     template <typename T>
-    std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>>
-    extend() {
+    std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>> extend() {
         DataType* tp = Registry::GetType<T>();
-        if (!tp) throw Exception(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        if (!tp) {
+            throw InputException(String::Format("extend - Type '%s' has not been registered", type_name<T>()));
+        }
 
         return EnumTypeBuilder<T>((EnumType*)tp);
     }
@@ -60,7 +86,9 @@ namespace bind {
     template <typename T>
     ValuePointer* global(const String& name, T* val) {
         DataType* tp = Registry::GetType<T>();
-        if (!tp) throw Exception(String::Format("global - Type '%s' has not been registered", type_name<T>()));
+        if (!tp) {
+            throw InputException(String::Format("global - Type '%s' has not been registered", type_name<T>()));
+        }
 
         ValuePointer* v = new ValuePointer(name, tp, val, Registry::GlobalNamespace());
         Registry::Add(v);
@@ -69,12 +97,7 @@ namespace bind {
 
     template <typename Ret, typename... Args>
     Function* function(const String& name, Ret (*fn)(Args...)) {
-        Function* func = new Function(
-            name,
-            fn,
-            Registry::Signature<Ret, Args...>(),
-            Registry::GlobalNamespace()
-        );
+        Function* func = new Function(name, fn, Registry::Signature<Ret, Args...>(), Registry::GlobalNamespace());
 
         func->setCallHandler(new HostCallHandler(func));
 
@@ -85,7 +108,9 @@ namespace bind {
     template <typename T>
     AliasType* alias(const String& name) {
         DataType* tp = Registry::GetType<T>();
-        if (!tp) throw Exception(String::Format("alias - Type '%s' has not been registered", type_name<T>()));
+        if (!tp) {
+            throw InputException(String::Format("alias - Type '%s' has not been registered", type_name<T>()));
+        }
 
         return alias(name, tp);
     }

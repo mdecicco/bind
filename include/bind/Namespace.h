@@ -1,11 +1,11 @@
 #pragma once
 #include <bind/interfaces/ISymbol.h>
+#include <bind/util/EnumTypeBuilder.hpp>
 #include <bind/util/ObjectTypeBuilder.hpp>
 #include <bind/util/PrimitiveTypeBuilder.hpp>
-#include <bind/util/EnumTypeBuilder.hpp>
+#include <unordered_map>
 #include <utils/String.h>
 #include <utils/interfaces/IWithUserData.h>
-#include <unordered_map>
 
 namespace bind {
     class AliasType;
@@ -18,28 +18,25 @@ namespace bind {
             Namespace(Namespace* parent, DataType* type);
 
             template <typename T>
-            std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>>
-            type(const String& name);
+            std::enable_if_t<is_type_valid_opaque_v<T>, DataType*> opaqueType(const String& name);
 
             template <typename T>
-            std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>>
-            extend();
+            std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>> type(const String& name);
 
             template <typename T>
-            std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>>
-            type(const String& name);
+            std::enable_if_t<std::is_class_v<T>, ObjectTypeBuilder<T>> extend();
 
             template <typename T>
-            std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>>
-            extend();
+            std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>> type(const String& name);
 
             template <typename T>
-            std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>>
-            type(const String& name);
+            std::enable_if_t<std::is_fundamental_v<T>, PrimitiveTypeBuilder<T>> extend();
 
             template <typename T>
-            std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>>
-            extend();
+            std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>> type(const String& name);
+
+            template <typename T>
+            std::enable_if_t<std::is_enum_v<T>, EnumTypeBuilder<T>> extend();
 
             template <typename T>
             ValuePointer* value(const String& name, T* val);
@@ -59,7 +56,7 @@ namespace bind {
             const Array<ISymbol*>& getSymbols() const;
             void add(ISymbol* sym);
             void remove(ISymbol* sym);
-        
+
         protected:
             Namespace* m_parent;
             DataType* m_forType;
