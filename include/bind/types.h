@@ -3,19 +3,19 @@
 
 namespace bind {
     using namespace utils;
-    
+
     typedef u32 AccessFlags;
     typedef u64 symbol_id;
 
-    constexpr u32 PublicAccess = 0;
+    constexpr u32 PublicAccess     = 0;
     constexpr u32 FullAccessRights = 0xFFFFFFFF;
 
-    constexpr const char* ConstructorName = "$ctor";
-    constexpr u32 ConstructorNameLen = 5;
-    constexpr const char* DestructorName = "$dtor";
-    constexpr u32 DestructorNameLen = 5;
+    constexpr const char* ConstructorName  = "$ctor";
+    constexpr u32 ConstructorNameLen       = 5;
+    constexpr const char* DestructorName   = "$dtor";
+    constexpr u32 DestructorNameLen        = 5;
     constexpr const char* CastOperatorName = "$cast";
-    constexpr u32 CastOperatorNameLen = 5;
+    constexpr u32 CastOperatorNameLen      = 5;
 
     struct type_meta {
         unsigned size : 16;
@@ -32,6 +32,7 @@ namespace bind {
         unsigned is_pointer : 1;
         unsigned is_alias : 1;
         unsigned is_enum : 1;
-        unsigned __pad0 : 3;
+        unsigned is_opaque : 1;
+        unsigned __pad0 : 2;
     };
 };

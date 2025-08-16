@@ -52,7 +52,7 @@ namespace bind {
 
         // Probably a hack
         const type_meta& retMeta = m_returnType->getInfo();
-        if (retMeta.size > 0 && (retMeta.size > 8 || !retMeta.is_trivial)) {
+        if (retMeta.size > 0 && !retMeta.is_opaque && (retMeta.size > 8 || !retMeta.is_trivial)) {
             m_cif.flags = FFI_TYPE_STRUCT;
         }
     }

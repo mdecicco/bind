@@ -59,6 +59,7 @@ namespace bind {
                 0, // is_pointer
                 0, // is_alias
                 0, // is_enum
+                1, // is_opaque
                 0  // padding
             };
         } else {
@@ -81,6 +82,7 @@ namespace bind {
                 std::is_pointer_v<T> || std::is_reference_v<T>, // is_pointer
                 0,                                              // is_alias
                 0,                                              // is_enum
+                0,                                              // is_opaque
                 0                                               // padding
             };
         }
